@@ -88,6 +88,7 @@ function displayDataByCategory(items) {
             <p><strong>總支出金額：</strong> ${totalAmount.toLocaleString()} 元</p>
             <p><strong>總交易筆數：</strong> ${items.length} 筆</p>
         </div>
+        <canvas id="category-chart" style="display: none;"></canvas>
     `;
     
     // 按金額排序分類
@@ -98,10 +99,6 @@ function displayDataByCategory(items) {
     sortedCategories.forEach((category, categoryIndex) => {
         const categoryData = groupedData[category];
         const percentage = ((categoryData.totalAmount / totalAmount) * 100).toFixed(1);
-        
-        categoryData.items.map(item => {
-            console.log(item['交易金額']);
-        });
 
         html += `
             <div class="category-section">
@@ -150,6 +147,8 @@ function displayDataByCategory(items) {
     
     container.innerHTML = html;
     
+    generateCategoryChart(groupedData);
+
     // 添加排序事件監聽器
     addSortEventListeners();
 }
@@ -246,6 +245,10 @@ function getNotionPropertyValue(property) {
         default:
             return '';
     }
+}
+
+function generateCategoryChart(groupedData) {
+    console.log(groupedData);
 }
 
 // 頁面載入時自動載入資料
