@@ -1,0 +1,62 @@
+const express = require('express');
+const { Client } = require('@notionhq/client');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const client = new Client({ auth: process.env.NOTION_ACCESS_TOKEN });
+
+// 中間件
+app.use(express.json());
+app.use(express.static('public'));
+
+// 路由：提供前端頁面
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API 路由：獲取 Notion 資料
+app.get('/api/notion-data', async (req, res) => {
+  try {
+    // 這裡添加你的 Notion API 調用
+    // 例如：獲取資料庫
+    const response = await client.databases.query({
+      database_id: process.env.NOTION_DATABASE_ID,
+    });
+    
+    res.json({
+      success: true,
+      data: response.results
+    });
+  } catch (error) {
+    console.error('Notion API 錯誤:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 獲取特定頁面資料
+app.get('/api/page/:pageId', async (req, res) => {
+  try {
+    const pageId = req.params.pageId;
+    const response = await client.pages.retrieve({ page_id: pageId });
+    
+    res.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    console.error('獲取頁面錯誤:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`服務器運行在 http://localhost:${PORT}`);
+}); 

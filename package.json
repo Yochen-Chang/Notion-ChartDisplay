@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "@notionhq/client": "^4.0.1",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2"
+  },
+  "name": "notion-chartdisplay",
+  "version": "1.0.0",
+  "description": "Notion API 資料顯示應用",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "notion",
+    "api",
+    "chart",
+    "display"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
