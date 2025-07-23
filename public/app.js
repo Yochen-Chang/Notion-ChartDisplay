@@ -95,7 +95,7 @@ function displayDataByCategory(items) {
         groupedData[b].totalAmount - groupedData[a].totalAmount
     );
     
-    sortedCategories.forEach(category => {
+    sortedCategories.forEach((category, categoryIndex) => {
         const categoryData = groupedData[category];
         const percentage = ((categoryData.totalAmount / totalAmount) * 100).toFixed(1);
         
@@ -114,22 +114,29 @@ function displayDataByCategory(items) {
                     </div>
                 </div>
                 <div class="table-container">
-                    <table class="transaction-table">
+                    <table class="transaction-table" data-category="${categoryIndex}">
                         <thead>
                             <tr>
-                                <th>交易說明</th>
-                                <th>交易項目</th>
-                                <th>交易日期</th>
-                                <th>交易金額</th>
+                                <th class="sortable" data-sort="transaction-name" data-category="${categoryIndex}">
+                                    交易項目
+                                    <span class="sort-icon"></span>
+                                </th>
+                                <th class="sortable" data-sort="transaction-date" data-category="${categoryIndex}">
+                                    交易日期
+                                    <span class="sort-icon"></span>
+                                </th>
+                                <th class="sortable" data-sort="transaction-amount" data-category="${categoryIndex}">
+                                    交易金額
+                                    <span class="sort-icon"></span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             ${categoryData.items.map(item => `
                                 <tr class="transaction-row">
-                                    <td class="transaction-name">${item['交易說明'] || '無說明'}</td>
-                                    <td class="transaction-category">${item['交易項目'] || ''}</td>
+                                    <td class="transaction-name">${item['交易項目'] || '無項目'}</td>
                                     <td class="transaction-date">${item['交易日期'] || ''}</td>
-                                    <td class="transaction-amount ${parseFloat(item['交易金額']) < 0 ? 'negative' : ''}">
+                                    <td class="transaction-amount ${parseFloat(item['交易金額']) < 0 ? 'negative' : ''}" data-amount="${parseFloat(item['交易金額']) || 0}">
                                         ${isNaN(parseFloat(item['交易金額'])) ? '0' : parseFloat(item['交易金額']).toLocaleString()} 元
                                     </td>
                                 </tr>
@@ -142,6 +149,71 @@ function displayDataByCategory(items) {
     });
     
     container.innerHTML = html;
+    
+    // 添加排序事件監聽器
+    addSortEventListeners();
+}
+
+// 添加排序功能
+function addSortEventListeners() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const sortField = this.dataset.sort;
+            const categoryIndex = this.dataset.category;
+            const table = document.querySelector(`table[data-category="${categoryIndex}"]`);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // 獲取當前排序方向
+            const currentDirection = this.dataset.direction || 'asc';
+            const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+            
+            // 重置所有排序圖標
+            table.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.textContent = '';
+            });
+            
+            // 更新當前排序圖標
+            const sortIcon = this.querySelector('.sort-icon');
+            sortIcon.textContent = newDirection === 'asc' ? '↑' : '↓';
+            
+            // 更新排序方向
+            this.dataset.direction = newDirection;
+            
+            // 排序行
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch(sortField) {
+                    case 'transaction-name':
+                        aValue = a.querySelector('.transaction-name').textContent.trim();
+                        bValue = b.querySelector('.transaction-name').textContent.trim();
+                        break;
+                    case 'transaction-date':
+                        aValue = new Date(a.querySelector('.transaction-date').textContent.trim());
+                        bValue = new Date(b.querySelector('.transaction-date').textContent.trim());
+                        break;
+                    case 'transaction-amount':
+                        aValue = parseFloat(a.querySelector('.transaction-amount').dataset.amount);
+                        bValue = parseFloat(b.querySelector('.transaction-amount').dataset.amount);
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (newDirection === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+            
+            // 重新插入排序後的行
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
 }
 
 // 獲取 Notion 文字內容
