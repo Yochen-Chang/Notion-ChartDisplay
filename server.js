@@ -18,8 +18,18 @@ app.get('/', (req, res) => {
 // API 路由：獲取 Notion 資料
 app.get('/api/notion-data', async (req, res) => {
   try {
-    // 這裡添加你的 Notion API 調用
-    // 例如：獲取資料庫
+    // 檢查環境變量
+    if (!process.env.NOTION_ACCESS_TOKEN || !process.env.NOTION_DATABASE_ID) {
+      console.error("缺少必要的環境變量:", {
+        hasToken: !!process.env.NOTION_ACCESS_TOKEN,
+        hasDatabaseId: !!process.env.NOTION_DATABASE_ID,
+      });
+      return res.status(500).json({
+        success: false,
+        error: "服務器配置錯誤：缺少 Notion 憑證",
+      });
+    }
+
     const response = await client.databases.query({
       database_id: process.env.NOTION_DATABASE_ID,
     });
