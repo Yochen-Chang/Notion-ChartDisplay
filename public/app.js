@@ -301,7 +301,28 @@ function generateCategoryChart(groupedData) {
   const chart_height = chart.style.width ? chart.style.width : 400;
   const chart_total_height = chart_height + labels_count.length * 24; // 根據標籤長度調整高度
   chart.style.height = `${chart_total_height}px`;
-   
+
+  // 自動生成顏色
+  const generateColors = (count) => {
+     const colors = [];
+     for (let i = 0; i < count; i++) {
+       // 使用 HSL 色彩空間，均勻分布色相
+       const hue = ((i * 360) / count) % 360;
+
+       const saturation = 55 + (i % 10);
+       const lightness = 75 + (i % 15);
+
+       // 生成背景色（更淺，更柔和）
+       const bgColor = `hsla(${hue}, ${saturation}%, ${lightness + 5}%, 0.15)`;
+       // 生成邊框色（稍深，但保持柔和）
+       const borderColor = `hsla(${hue}, ${saturation}%, ${lightness - 10}%, 0.8)`;
+
+       colors.push({ bg: bgColor, border: borderColor });
+     }
+     return colors;
+  };
+  let colors = generateColors(labels_count.length);
+
   const config = {
     type: "doughnut",
     data: {
@@ -310,22 +331,8 @@ function generateCategoryChart(groupedData) {
         {
           label: "支出金額",
           data: Object.values(groupedData).map((item) => item.totalAmount),
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.2)",
-            "rgba(54, 162, 235, 0.2)",
-            "rgba(255, 206, 86, 0.2)",
-            "rgba(75, 192, 192, 0.2)",
-            "rgba(153, 102, 255, 0.2)",
-            "rgba(255, 159, 64, 0.2)",
-          ],
-          borderColor: [
-            "rgba(255, 99, 132, 1)",
-            "rgba(54, 162, 235, 1)",
-            "rgba(255, 206, 86, 1)",
-            "rgba(75, 192, 192, 1)",
-            "rgba(153, 102, 255, 1)",
-            "rgba(255, 159, 64, 1)",
-          ],
+          backgroundColor: colors.map((c) => c.bg),
+          borderColor: colors.map((c) => c.border),
           borderWidth: 1,
         },
       ],
