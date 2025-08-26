@@ -294,6 +294,12 @@ function generateCategoryChart(groupedData) {
   let chart = document.getElementById("category-chart");
   let label_position = window.innerWidth < 468 ? "bottom" : "right";
 
+  // 動態計算圖表高度，根據標籤長度調整
+  const labels_count = Object.keys(groupedData);
+  const chart_height = chart.style.width ? chart.style.width : 400;
+  const chart_total_height = chart_height + labels_count.length * 24; // 根據標籤長度調整高度
+  chart.style.height = `${chart_total_height}px`;
+   
   const config = {
     type: "doughnut",
     data: {
@@ -337,9 +343,9 @@ function generateCategoryChart(groupedData) {
           position: label_position,
           labels: {
             font: {
-              size: 18,
+              size: 16,
             },
-            padding: 10,
+            padding: 8,
             generateLabels: function (chart) {
               const data = chart.data;
               if (data.labels.length && data.datasets.length) {
@@ -360,10 +366,6 @@ function generateCategoryChart(groupedData) {
                 });
               }
               return [];
-            },
-            margin: {
-              left: 30,
-              top: 30,
             },
           },
         },
