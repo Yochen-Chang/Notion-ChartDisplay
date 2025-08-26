@@ -15,23 +15,23 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API 路由：獲取 Notion 資料
-app.get('/api/notion-data', async (req, res) => {
+// 新增 POST 路由來支援前端傳遞憑證
+app.post('/api/notion-data', async (req, res) => {
   try {
-    // 檢查環境變量
-    if (!process.env.NOTION_ACCESS_TOKEN || !process.env.NOTION_DATABASE_ID) {
-      console.error("缺少必要的環境變量:", {
-        hasToken: !!process.env.NOTION_ACCESS_TOKEN,
-        hasDatabaseId: !!process.env.NOTION_DATABASE_ID,
-      });
-      return res.status(500).json({
+    const { token, databaseId } = req.body;
+    
+    if (!token || !databaseId) {
+      return res.status(400).json({
         success: false,
-        error: "服務器配置錯誤：缺少 Notion 憑證",
+        error: "缺少必要的參數：token 或 databaseId"
       });
     }
 
+    // 創建新的 Notion 客戶端
+    const client = new Client({ auth: token });
+
     const response = await client.databases.query({
-      database_id: process.env.NOTION_DATABASE_ID,
+      database_id: databaseId,
     });
     
     res.json({

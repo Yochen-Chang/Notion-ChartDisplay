@@ -1,31 +1,51 @@
 // 載入 Notion 資料
 async function loadNotionData() {
-    const loadingEl = document.getElementById('loading');
-    const errorEl = document.getElementById('error');
-    const dataContainer = document.getElementById('data-container');
-    
-    // 顯示載入狀態
-    loadingEl.style.display = 'block';
-    errorEl.style.display = 'none';
-    dataContainer.innerHTML = '';
-    
-    try {
-        const response = await fetch('/api/notion-data');
-        const result = await response.json();
-        
-        if (result.success) {
-            displayData(result.data);
-            console.log(result.data);
-        } else {
-            throw new Error(result.error);
-        }
-    } catch (error) {
-        console.error('載入資料錯誤:', error);
-        errorEl.textContent = `載入失敗: ${error.message}`;
-        errorEl.style.display = 'block';
-    } finally {
-        loadingEl.style.display = 'none';
+  const loadingEl = document.getElementById("loading");
+  const errorEl = document.getElementById("error");
+  const dataContainer = document.getElementById("data-container");
+
+  // 檢查是否有儲存的設定
+  const token = localStorage.getItem("notion_access_token");
+  const databaseId = localStorage.getItem("notion_database_id");
+
+  if (!token || !databaseId) {
+    errorEl.textContent = "請先設定 Notion 憑證";
+    errorEl.style.display = "block";
+    loadingEl.style.display = "none";
+    return;
+  }
+
+  // 顯示載入狀態
+  loadingEl.style.display = "block";
+  errorEl.style.display = "none";
+  dataContainer.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/notion-data", {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+        token: token,
+        databaseId: databaseId,
+        }),
+    });
+    const result = await response.json();
+
+    if (result.success) {
+      displayData(result.data);
+      console.log(result.data);
+    } else {
+      throw new Error(result.error);
     }
+  } catch (error) {
+    console.error("載入資料錯誤:", error);
+    errorEl.textContent = `載入失敗: ${error.message}`;
+    errorEl.style.display = "block";
+  } finally {
+    loadingEl.style.display = "none";
+  }
 }
 
 // 顯示資料
@@ -363,6 +383,72 @@ function generateCategoryChart(groupedData) {
   new Chart(chart, config);
   chart.style.display = "block";
 }
+document.addEventListener("DOMContentLoaded", function () {
+  loadSettings();
+  loadNotionData();
+});
+
+// 載入設定
+function loadSettings() {
+  const token = localStorage.getItem("notion_access_token");
+  const databaseId = localStorage.getItem("notion_database_id");
+
+  if (token && databaseId) {
+    // 如果已有設定，可以自動填入表單
+    console.log("已載入儲存的設定");
+  }
+}
+
+// 開啟設定視窗
+function openSettings() {
+  const modal = document.getElementById("settings-modal");
+  const tokenInput = document.getElementById("notion-token");
+  const databaseInput = document.getElementById("notion-database");
+
+  // 載入已儲存的設定
+  const savedToken = localStorage.getItem("notion_access_token");
+  const savedDatabaseId = localStorage.getItem("notion_database_id");
+
+  if (savedToken) tokenInput.value = savedToken;
+  if (savedDatabaseId) databaseInput.value = savedDatabaseId;
+
+  modal.style.display = "flex";
+}
+
+// 關閉設定視窗
+function closeSettings() {
+  const modal = document.getElementById("settings-modal");
+  modal.style.display = "none";
+}
+
+// 儲存設定
+function saveSettings() {
+  const token = document.getElementById("notion-token").value.trim();
+  const databaseId = document.getElementById("notion-database").value.trim();
+
+  if (!token || !databaseId) {
+    alert("請填寫完整的設定資訊");
+    return;
+  }
+
+  // 儲存到 localStorage
+  localStorage.setItem("notion_access_token", token);
+  localStorage.setItem("notion_database_id", databaseId);
+
+  alert("設定已儲存！");
+  closeSettings();
+
+  // 重新載入資料
+  loadNotionData();
+}
+
+// 點擊彈出視窗外部關閉
+window.onclick = function (event) {
+  const modal = document.getElementById("settings-modal");
+  if (event.target === modal) {
+    closeSettings();
+  }
+};
 
 // 頁面載入時自動載入資料
 document.addEventListener('DOMContentLoaded', loadNotionData); 
