@@ -4,9 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const client = new Client({
-  auth: "secret_QLeuN8OvmGrpbmDcwLjZ8rn8FeelH7j3ymqIIEYO3Zp",
-});
+const client = new Client({ auth: process.env.NOTION_ACCESS_TOKEN });
 
 // 中間件
 app.use(express.json());
@@ -21,19 +19,19 @@ app.get('/', (req, res) => {
 app.get('/api/notion-data', async (req, res) => {
   try {
     // 檢查環境變量
-    // if (!process.env.NOTION_ACCESS_TOKEN || !process.env.NOTION_DATABASE_ID) {
-    //   console.error("缺少必要的環境變量:", {
-    //     hasToken: !!process.env.NOTION_ACCESS_TOKEN,
-    //     hasDatabaseId: !!process.env.NOTION_DATABASE_ID,
-    //   });
-    //   return res.status(500).json({
-    //     success: false,
-    //     error: "服務器配置錯誤：缺少 Notion 憑證",
-    //   });
-    // }
+    if (!process.env.NOTION_ACCESS_TOKEN || !process.env.NOTION_DATABASE_ID) {
+      console.error("缺少必要的環境變量:", {
+        hasToken: !!process.env.NOTION_ACCESS_TOKEN,
+        hasDatabaseId: !!process.env.NOTION_DATABASE_ID,
+      });
+      return res.status(500).json({
+        success: false,
+        error: "服務器配置錯誤：缺少 Notion 憑證",
+      });
+    }
 
     const response = await client.databases.query({
-      database_id: "238172d833fa8060b38bed8c9c9c0e97",
+      database_id: process.env.NOTION_DATABASE_ID,
     });
     
     res.json({
