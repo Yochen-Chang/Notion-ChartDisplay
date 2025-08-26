@@ -1,5 +1,6 @@
 // 載入 Notion 資料
 async function loadNotionData() {
+    //TODO: Notion 單次抓取資料限制為 100 筆，需要分頁抓取
   const loadingEl = document.getElementById("loading");
   const errorEl = document.getElementById("error");
   const dataContainer = document.getElementById("data-container");
