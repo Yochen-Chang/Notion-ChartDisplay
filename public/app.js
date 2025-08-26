@@ -86,6 +86,8 @@ function displayDataByCategory(items) {
     items.forEach(item => {
         const category = item['交易類型'] || '其他';
         const amount = parseFloat(item['交易金額']) || 0;
+        if(!['支出', '收入'].includes(item['收入/支出'])) return;
+        if(['旅遊基金', '約會基金', '其他'].includes(item['消費工具'])) return;
         
         if (!groupedData[category]) {
             groupedData[category] = {
