@@ -88,7 +88,9 @@ function displayDataByCategory(items) {
             <p><strong>總支出金額：</strong> ${totalAmount.toLocaleString()} 元</p>
             <p><strong>總交易筆數：</strong> ${items.length} 筆</p>
         </div>
-        <canvas id="category-chart" style="display: none;"></canvas>
+        <div class="chart-container" style="display: flex; justify-content: center; align-items: center;">
+            <canvas id="category-chart"></canvas>
+        </div>
     `;
     
     // 按金額排序分類
@@ -118,10 +120,6 @@ function displayDataByCategory(items) {
                                     交易項目
                                     <span class="sort-icon"></span>
                                 </th>
-                                <th class="sortable" data-sort="transaction-type" data-category="${categoryIndex}">
-                                    交易類型
-                                    <span class="sort-icon"></span>
-                                </th>
                                 <th class="sortable" data-sort="transaction-date" data-category="${categoryIndex}">
                                     交易日期
                                     <span class="sort-icon"></span>
@@ -139,9 +137,6 @@ function displayDataByCategory(items) {
                                 <tr class="transaction-row">
                                     <td class="transaction-name">${
                                       item["交易說明"] || ""
-                                    }</td>
-                                    <td class="transaction-type">${
-                                      item["交易類型"] || ""
                                     }</td>
                                     <td class="transaction-date">${
                                       item["交易日期"] || ""
@@ -275,7 +270,98 @@ function getNotionPropertyValue(property) {
 }
 
 function generateCategoryChart(groupedData) {
-    console.log(groupedData);
+  console.log(groupedData);
+  let chart = document.getElementById("category-chart");
+  let label_position = window.innerWidth < 468 ? "bottom" : "right";
+
+  const config = {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(groupedData),
+      datasets: [
+        {
+          label: "支出金額",
+          data: Object.values(groupedData).map((item) => item.totalAmount),
+          backgroundColor: [
+            "rgba(255, 99, 132, 0.2)",
+            "rgba(54, 162, 235, 0.2)",
+            "rgba(255, 206, 86, 0.2)",
+            "rgba(75, 192, 192, 0.2)",
+            "rgba(153, 102, 255, 0.2)",
+            "rgba(255, 159, 64, 0.2)",
+          ],
+          borderColor: [
+            "rgba(255, 99, 132, 1)",
+            "rgba(54, 162, 235, 1)",
+            "rgba(255, 206, 86, 1)",
+            "rgba(75, 192, 192, 1)",
+            "rgba(153, 102, 255, 1)",
+            "rgba(255, 159, 64, 1)",
+          ],
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: false,
+      layout: {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10,
+        },
+      },
+      plugins: {
+        legend: {
+          position: label_position,
+          labels: {
+            font: {
+              size: 18,
+            },
+            padding: 10,
+            generateLabels: function (chart) {
+              const data = chart.data;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map(function (label, i) {
+                  const dataset = data.datasets[0];
+                  const value = dataset.data[i];
+                  const total = dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+
+                  return {
+                    text: `${label}：$${value} (${percentage}%)`,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.borderColor[i],
+                    lineWidth: dataset.borderWidth,
+                    hidden: false,
+                    index: i,
+                  };
+                });
+              }
+              return [];
+            },
+            margin: {
+              left: 30,
+              top: 30,
+            },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
+              return `${context.label}: $${context.parsed} (${percentage}%)`;
+            },
+          },
+        },
+      },
+    },
+  };
+
+  new Chart(chart, config);
+  chart.style.display = "block";
 }
 
 // 頁面載入時自動載入資料

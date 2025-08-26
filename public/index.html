@@ -66,7 +66,6 @@
             color: white;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 30px;
             text-align: center;
         }
         .summary-section h2 {
@@ -180,7 +179,11 @@
         .transaction-amount.negative {
             color: #2e7d32;
         }
-        
+        #category-chart{
+            margin-block: 10px;
+            width: clamp(300px, 100%, 800px) !important;
+            aspect-ratio: 1.2/1;
+        }
         /* 響應式設計 */
         @media (max-width: 768px) {
             .transaction-table {
@@ -199,9 +202,14 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
+            #category-chart{
+                width: clamp(300px, 100%, 800px);
+                aspect-ratio: 1/1.5;
+            }
         }
     </style>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
 <body>
     <div class="container">
         <h1>📊 當月消費統計</h1>
