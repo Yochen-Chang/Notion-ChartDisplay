@@ -118,6 +118,10 @@ function displayDataByCategory(items) {
                                     交易項目
                                     <span class="sort-icon"></span>
                                 </th>
+                                <th class="sortable" data-sort="transaction-type" data-category="${categoryIndex}">
+                                    交易類型
+                                    <span class="sort-icon"></span>
+                                </th>
                                 <th class="sortable" data-sort="transaction-date" data-category="${categoryIndex}">
                                     交易日期
                                     <span class="sort-icon"></span>
@@ -129,15 +133,38 @@ function displayDataByCategory(items) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${categoryData.items.map(item => `
+                            ${categoryData.items
+                              .map(
+                                (item) => `
                                 <tr class="transaction-row">
-                                    <td class="transaction-name">${item['交易項目'] || '無項目'}</td>
-                                    <td class="transaction-date">${item['交易日期'] || ''}</td>
-                                    <td class="transaction-amount ${parseFloat(item['交易金額']) < 0 ? 'negative' : ''}" data-amount="${parseFloat(item['交易金額']) || 0}">
-                                        ${isNaN(parseFloat(item['交易金額'])) ? '0' : parseFloat(item['交易金額']).toLocaleString()} 元
+                                    <td class="transaction-name">${
+                                      item["交易說明"] || ""
+                                    }</td>
+                                    <td class="transaction-type">${
+                                      item["交易類型"] || ""
+                                    }</td>
+                                    <td class="transaction-date">${
+                                      item["交易日期"] || ""
+                                    }</td>
+                                    <td class="transaction-amount ${
+                                      parseFloat(item["交易金額"]) < 0
+                                        ? "negative"
+                                        : ""
+                                    }" data-amount="${
+                                  parseFloat(item["交易金額"]) || 0
+                                }">
+                                        ${
+                                          isNaN(parseFloat(item["交易金額"]))
+                                            ? "0"
+                                            : parseFloat(
+                                                item["交易金額"]
+                                              ).toLocaleString()
+                                        } 元
                                     </td>
                                 </tr>
-                            `).join('')}
+                            `
+                              )
+                              .join("")}
                         </tbody>
                     </table>
                 </div>
