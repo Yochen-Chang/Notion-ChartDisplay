@@ -66,6 +66,20 @@ function displayData(data) {
             });
         }
         
+        // 客製化篩選機制：排除特定支出方式+排除特定交易類型
+        if (!["支出", "收入"].includes(item_data["收入/支出"])) return;
+        if (["旅遊基金", "約會基金", "其他"].includes(item_data["消費工具"])) return;
+
+        // 只抓取當月資料
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const currentMonth = `${year}-${month}`;
+        if(item_data["交易類型"].startsWith('分期')){
+            console.log(item_data);
+        };
+        if (!item_data["交易日期"] || !item_data["交易日期"].startsWith(currentMonth)) return;
+
         items.push(item_data);
     }).join('');
     
