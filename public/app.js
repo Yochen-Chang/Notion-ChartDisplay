@@ -1,5 +1,5 @@
-// 載入 Notion 資料
-async function loadNotionData() {
+// 載入 Notion 資料 (整合版本)
+async function loadNotionData(filterType = 'default') {
     //TODO: Notion 單次抓取資料限制為 100 筆，需要分頁抓取
   const loadingEl = document.getElementById("loading");
   const errorEl = document.getElementById("error");
@@ -35,13 +35,13 @@ async function loadNotionData() {
     const result = await response.json();
 
     if (result.success) {
-      displayData(result.data);
-      console.log(result.data);
+      filterData(result.data, filterType);
+      console.log(`${filterType === 'default' ? '預設' : '替代'}篩選資料:`, result.data);
     } else {
       throw new Error(result.error);
     }
   } catch (error) {
-    console.error("載入資料錯誤:", error);
+    console.error(`載入${filterType === 'default' ? '預設' : '替代'}篩選資料錯誤:`, error);
     errorEl.textContent = `載入失敗: ${error.message}`;
     errorEl.style.display = "block";
   } finally {
@@ -49,8 +49,74 @@ async function loadNotionData() {
   }
 }
 
-// 顯示資料
-function displayData(data) {
+// 處理篩選條件變更
+function handleFilterChange(filterType) {
+  if (filterType === 'default' || filterType === 'alternative') {
+    loadNotionData(filterType);
+  }
+}
+
+// 切換下拉式選單顯示/隱藏
+function toggleSelect() {
+  const selectItems = document.getElementById('select-items');
+  const arrow = document.querySelector('.select-arrow');
+  
+  selectItems.classList.toggle('select-hide');
+  
+  // 控制箭頭旋轉
+  if (selectItems.classList.contains('select-hide')) {
+    arrow.classList.remove('rotate');
+  } else {
+    arrow.classList.add('rotate');
+  }
+}
+
+// 選擇選項
+function selectOption(element, value) {
+  // 更新選中的顯示內容
+  const selectedElement = document.querySelector('.select-selected');
+  const selectedSvg = element.querySelector('svg').cloneNode(true);
+  const selectedText = element.textContent.trim();
+  
+  // 清空並重新填充選中元素
+  selectedElement.innerHTML = '';
+  selectedElement.appendChild(selectedSvg);
+  selectedElement.appendChild(document.createTextNode(' ' + selectedText));
+  
+  // 添加箭頭圖示
+  const arrowSvg = document.createElement('svg');
+  arrowSvg.className = 'select-arrow';
+  arrowSvg.setAttribute('width', '16');
+  arrowSvg.setAttribute('height', '16');
+  arrowSvg.setAttribute('viewBox', '0 0 24 24');
+  arrowSvg.setAttribute('fill', 'none');
+  arrowSvg.setAttribute('stroke', 'currentColor');
+  arrowSvg.setAttribute('stroke-width', '2');
+  arrowSvg.innerHTML = '<path d="M6 9l6 6 6-6" />';
+  selectedElement.appendChild(arrowSvg);
+  
+  // 隱藏選項列表
+  document.getElementById('select-items').classList.add('select-hide');
+  
+  // 處理篩選變更
+  handleFilterChange(value);
+}
+
+// 點擊外部關閉下拉式選單
+document.addEventListener('click', function(event) {
+  const customSelect = document.querySelector('.custom-select');
+  if (!customSelect.contains(event.target)) {
+    document.getElementById('select-items').classList.add('select-hide');
+  }
+});
+
+// 載入替代篩選條件的 Notion 資料 (保留向後相容性)
+function loadAlternativeData() {
+  loadNotionData('alternative');
+}
+
+// 通用篩選函數
+function filterData(data, filterType = 'default') {
     const container = document.getElementById('data-container');
     
     if (!data || data.length === 0) {
@@ -67,31 +133,41 @@ function displayData(data) {
             });
         }
         
-        // 客製化篩選機制：排除特定支出方式+排除特定交易類型
+        // 基本篩選：只處理支出和收入
         if (!["支出", "收入"].includes(item_data["收入/支出"])) return;
-        if (["旅遊基金", "約會基金", "其他"].includes(item_data["消費工具"])) return;
+
+        // 根據篩選類型應用不同的篩選條件
+        if (filterType === 'default') {
+            // 預設篩選：排除旅遊基金、約會基金、其他
+            if (["旅遊基金", "約會基金", "其他"].includes(item_data["消費工具"])) return;
+        } else if (filterType === 'alternative') {
+            // 替代篩選：只包含旅遊基金、約會基金、其他，但排除分期付款
+            if (!["約會基金"].includes(item_data["消費工具"])) return;
+        }
 
         // 只抓取當月資料
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
         const currentMonth = `${year}-${month}`;
-        if(item_data["交易類型"].startsWith('分期')){
-            console.log(item_data);
-        };
         if (!item_data["交易日期"] || !item_data["交易日期"].startsWith(currentMonth)) return;
 
         items.push(item_data);
     }).join('');
     
-    console.log(items);
+    console.log(`${filterType === 'default' ? '預設' : '替代'}篩選項目:`, items);
     
     // 按交易類型分類並顯示
-    displayDataByCategory(items);
+    displayDataByCategory(items, filterType);
+}
+
+// 顯示資料 (預設篩選)
+function displayData(data) {
+    filterData(data, 'default');
 }
 
 // 按交易類型分類並顯示資料
-function displayDataByCategory(items) {
+function displayDataByCategory(items, filterType = 'default') {
     const container = document.getElementById('data-container');
     
     // 按交易類型分組
@@ -116,10 +192,18 @@ function displayDataByCategory(items) {
         totalAmount += amount;
     });
     
+    // 根據篩選類型生成不同的標題和說明
+    let title = '👤 個人花費總覽';
+    if (filterType === 'default') {
+        title = '👤 個人花費總覽';
+    } else if (filterType === 'alternative') {
+        title = '💑 共同花費總覽';
+    }
+    
     // 生成分類顯示的 HTML
     let html = `
         <div class="summary-section">
-            <h2>📈 支出總覽</h2>
+            <h2>${title}</h2>
             <p><strong>總支出金額：</strong> ${totalAmount.toLocaleString()} 元</p>
             <p><strong>總交易筆數：</strong> ${items.length} 筆</p>
         </div>
@@ -209,6 +293,8 @@ function displayDataByCategory(items) {
     // 添加排序事件監聽器
     addSortEventListeners();
 }
+
+
 
 // 添加排序功能
 function addSortEventListeners() {
